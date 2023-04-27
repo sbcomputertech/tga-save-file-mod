@@ -17,7 +17,7 @@ namespace SaveFile
 		private static ManualLogSource LogSource;
 		private void Awake()
 		{
-			Logger.LogInfo($"{PluginInfo.PLUGIN_NAME} ver {PluginInfo.PLUGIN_VERSION} loaded!"); // print a message to the BepInEx console
+			Logger.LogInfo($"{PluginInfo.PLUGIN_NAME} v{PluginInfo.PLUGIN_VERSION} loaded!"); // print a message to the BepInEx console
 			var harmony = new Harmony(PluginInfo.PLUGIN_GUID); // create a harmony patcher
 			harmony.PatchAll(); // run all patches in the mod dll
 			LogSource = Logger;
@@ -30,12 +30,12 @@ namespace SaveFile
 			Entries.RemoveAll(e => e.key == key);
 			Entries.Add(entry);
 			var json = JsonConvert.SerializeObject(Entries);
-			File.WriteAllText("tga.save.json", json);
+			File.WriteAllText("savefile.json", json);
 		}
 
 		private static object LoadFromJson(string key)
 		{
-			var text = File.ReadAllText("tga.save.json");
+			var text = File.ReadAllText("savefile.json");
 			Entries = JsonConvert.DeserializeObject<List<SaveEntry>>(text);
 			var saveEntries = Entries.Where(e => e.key == key).ToArray();
 			return saveEntries.Any() ? saveEntries.First().value : null;
@@ -61,7 +61,7 @@ namespace SaveFile
 				{
 					__result = (float)(double)res; // don't ask me why but this somehow makes it work
 				}
-				catch (InvalidCastException e)
+				catch (InvalidCastException)
 				{
 					LogSource.LogError("InvalidCastException on key " + key + ". Val type: " + res.GetType());
 					__result = 0f;

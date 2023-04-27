@@ -37,8 +37,7 @@ namespace SaveFile
 		{
 			var text = File.ReadAllText("tga.save.json");
 			Entries = JsonConvert.DeserializeObject<List<SaveEntry>>(text);
-			var e = Entries.Where(e => e.key == key);
-			var saveEntries = e as SaveEntry[] ?? e.ToArray();
+			var saveEntries = Entries.Where(e => e.key == key).ToArray();
 			return saveEntries.Any() ? saveEntries.First().value : null;
 		}
 
@@ -47,9 +46,10 @@ namespace SaveFile
 		{
 			[HarmonyPatch("SetFloat")]
 			[HarmonyPrefix]
-			public static void PrefixSetFloat(string key, float value)
+			public static bool PrefixSetFloat(string key, float value)
 			{
 				WriteToJson(key, value);
+				return false;
 			}
 
 			[HarmonyPatch("GetFloat", typeof(string))]
@@ -57,11 +57,6 @@ namespace SaveFile
 			public static bool PrefixGetFloat(string key, ref float __result)
 			{
 				var res = LoadFromJson(key);
-				if (res == null)
-				{
-					return true;
-				}
-
 				try
 				{
 					__result = (float)(double)res; // don't ask me why but this somehow makes it work
@@ -69,6 +64,7 @@ namespace SaveFile
 				catch (InvalidCastException e)
 				{
 					LogSource.LogError("InvalidCastException on key " + key + ". Val type: " + res.GetType());
+					__result = 0f;
 				}
 				return false;
 			}
